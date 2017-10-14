@@ -17,7 +17,8 @@ class KeyBind:
 
 
 Actions = actions.Actions()
-Mappings = (KeyBind(('Alt', 'x'), Actions.kill), )
+Mappings = (KeyBind(('Alt', 'x'), Actions.kill),
+            KeyBind(('Control', 'Return'), Actions.bullet))
 
 
 def filterKey(key):

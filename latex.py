@@ -19,9 +19,12 @@ class LatexDoc:
             copyfile(self.texFile, self.bakFile)
         else:
             copyfile('LaTeX/template.tex', self.texFile)
-            with fileinput.FileInput(self.texFile, inplace=True) as file:
-                for line in file:
-                    print(line.replace('(( TITLE ))', public.topic), end='')
+            self.replace('% TITLE %', public.topic)
+
+    def replace(self, target, text):
+        with fileinput.FileInput(self.texFile, inplace=True) as file:
+            for line in file:
+                print(line.replace(target, text), end='')
 
     def undoChanges(self):
         if self.oldNotesExist:
