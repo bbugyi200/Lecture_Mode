@@ -1,0 +1,184 @@
+#!/bin/zsh
+
+# Refreshes vim by reopening the file and then brings cursor to the bottom
+refresh_notes() {
+	tmux_sessions=$(tmux ls)
+	if [[ $tmux_sessions == *"notes:"* ]]; then
+		sess="notes"
+	elif [[ $tmux_sessions == *"$abbrv:"* ]]; then
+		sess="$abbrv"
+	fi
+
+	tmux send-keys -t $sess:0.0 ":e" Enter "G"
+}
+
+
+add_header() {
+read -r -d '' HEADER << EOF
+--------------------------------------------------------------------------------
+--------------------------------- $(date +%m/%d/%Y) -----------------------------------
+--------------------------------------------------------------------------------
+EOF
+
+printf "\n$HEADER\n" >> $fpath
+}
+
+
+# ---------- Command Line Arguments ----------
+eval set -- $(getopt -o "odubc:p:h:" -l "open,debug,undo,bottom,cut:,put:,dmenu,header:" -- "$@")
+
+putarg=
+debug=0
+dmenu=0
+bottom=0
+header=0
+cut="suffix+prefix"
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-o' | '--open' )
+			action="open";;
+		'-d' | '--debug' )
+			debug=1;;
+		'-u' | '--undo' )
+			action="undo";;
+		'-b' | '--bottom' )
+			bottom=1;;
+		'-c' | '--cut' )
+			shift
+			cut="$1";;
+		'-p' | '--put' )
+			shift
+			action="put"
+			putarg="$1";;
+		'--dmenu' )
+			dmenu=1;;
+		'-h' | '--header')
+			shift
+			if [[ $1 == "true" ]]; then
+				header=1
+			fi;;
+		'--' )
+			shift
+			break;;
+	esac
+	shift
+done
+
+# ---------- DEBUG ----------
+if [[ $debug -eq 1 ]]; then
+	PS4='$LINENO: '
+	set -x
+else
+	exec 2>&1
+	exec 1> /dev/null
+fi
+
+
+# ---------- Variable Initializations ----------
+# Retrieves the basename of the pdf (minus the ".pdf" suffix)
+
+if [[ "$1" == *".pdf" ]]; then
+	subdir="Textbook"
+	isbook=1
+else
+	subdir="Lectures"
+	isbook=0
+fi
+
+base=$(basename -s'.pdf' "$1")
+
+base=${base// /_}
+
+# Abbreviation for book (used for tmux session name)
+abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
+
+
+# Full path to text file that stores my notes for this book
+fpath="/home/bryan/Dropbox/notes/Study/${subdir}/${base}.txt"
+
+# Escaped file path (for use on command line)
+esc_fpath=$(printf "%q" $fpath)
+
+# ---------- Handle Actions ----------
+case $action in
+	'open')
+		if [[ $header -eq 1 ]]; then
+			add_header
+		fi
+
+		if [[ $bottom -eq 1 ]]; then
+			bspc node -p south -o 0.8
+			termite --title="notes" --class="notes" -e "tm-init notes" &
+			sleep 0.5
+			tmux send-keys -t notes:0.0 "vim + $esc_fpath" Enter
+		else
+			tmux send-keys -t Terminal:0.0 "tm $abbrv" Enter
+			sleep 0.5
+			tmux send-keys -t $abbrv.0 "vim -c'?---' $esc_fpath" Enter "zt"
+			wmctrl -a termite
+		fi;;
+	'undo')
+		sed -i'.backup' ':a; ${d; q}; N; /\n$/!ba' $fpath
+		sed -i '$d' $fpath
+		refresh_notes;;
+	'put')
+		# gets current page number
+		page=$(wmctrl -lx | grep "zathura.Zathura" | tr -s ' ' | cut -d ' ' -f6 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
+
+		# if '--dmenu' was used, clip is set using dmenu input
+		if [[ $dmenu -eq 1 ]]; then
+			clip=$(echo | dmenu -p "notepad ($putarg):")
+		# else the contents of the clipboard are used
+		else
+			clip=$(xclip -selection clipboard -o)
+
+			# Remove newlines
+			clip=$(echo $clip | tr '\n' ' ')
+
+			# Remove partial sentence at beginning of clip
+			if [[ $cut == *"prefix"* ]] && [[ $clip == [a-z,' ']* ]]; then
+					clip=${clip#*. }
+			fi
+
+			# Remove partial sentence at end of clip
+			if [[ $cut == *"suffix"* ]] && [[ $clip == *[A-Z]*"."* ]]; then
+				if [[ $clip == *[A-Za-z,' '] ]]; then
+					clip="${clip%.*}."
+				fi
+			fi
+
+			# Enclose clip in quotes
+			clip="\"${clip}\""
+		fi
+
+		# Inserts newline in clip every 80 characters
+		clip=$(echo $clip | fold -w80 -s)
+
+		if [[ -z "$clip" ]]; then
+			echo "'clip' variable is empty" | tee >(logger -t $0)
+			exit 1
+		fi
+
+		if [[ $putarg == "major" ]]; then
+			printf "\n" >> $fpath
+		elif [[ $putarg == "minor" ]]; then
+			printf "  * " >> $fpath
+
+			# Replaces every '\n' in clip with '\n     '
+			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n    /g')
+		else
+			echo "Unacceptable value ('putarg' = $putarg)" | tee >(logger -t $0)
+			exit 1
+		fi
+
+		echo -n $clip >> $fpath 
+
+		if [[ $isbook -eq 1 && $page != "" ]]; then
+			printf " - p%s" "$page" >> $fpath
+		fi
+
+		printf '\n' >> $fpath
+		
+		refresh_notes
+		;;
+esac
