@@ -1,5 +1,7 @@
 import pyxhook
 import time
+import latex
+import keyhooks
 import dmenu
 import sqlite3
 
