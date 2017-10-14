@@ -3,6 +3,6 @@ __pycache__/
 *.db
 example.py
 venv/
-LaTeX/
+LaTeX/*
 
 !LaTeX/template.tex
