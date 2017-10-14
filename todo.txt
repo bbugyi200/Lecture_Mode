@@ -1,2 +1,5 @@
-[] Migrate 'lecture_mode' to python
-[] 
+===== Dmenu Version =====
+
+===== Tinker Version =====
+
+===== SQLite DB =====
