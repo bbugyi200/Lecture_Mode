@@ -4,5 +4,6 @@ __pycache__/
 example.py
 venv/
 LaTeX/*
+.localaliases
 
 !LaTeX/template.tex

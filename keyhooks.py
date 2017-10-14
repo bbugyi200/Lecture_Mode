@@ -1,6 +1,7 @@
 import pyxhook
 import time
 import actions
+import public
 
 PressedKeys = list()
 running = True
@@ -48,3 +49,6 @@ def start():
         time.sleep(0.1)
 
     hookman.cancel()
+
+    if not public.documentModified:
+        public.LatexDoc.undoChanges()
