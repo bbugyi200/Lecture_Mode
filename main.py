@@ -31,6 +31,8 @@ def main():
 
     public.LatexDoc = latex.LatexDoc()
     public.LatexDoc.build()
+    public.LatexDoc.compile()
+    public.LatexDoc.open()
 
     keyhooks.start()
 
