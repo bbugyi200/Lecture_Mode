@@ -8,7 +8,7 @@ DB_Connection = sqlite3.connect(DB_Path)
 DB = DB_Connection.cursor()
 
 
-def getTopics() -> "List of Strings":
+def getAllTopics() -> "List of Strings":
     try:
         DB.execute('SELECT * FROM topics')
         return [entry[0] for entry in DB.fetchall()]
@@ -18,7 +18,7 @@ def getTopics() -> "List of Strings":
 
 
 def main():
-    Topics_List = getTopics()
+    Topics_List = getAllTopics()
     topic = dmenu.show(Topics_List)
 
     if topic not in Topics_List:
@@ -28,8 +28,8 @@ def main():
             DB.execute('INSERT INTO topics VALUES (?)', (topic,))
             DB_Connection.commit()
 
-    keyhooks.start()
     latex.build()
+    keyhooks.start()
 
 
 if __name__ == '__main__':
