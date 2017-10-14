@@ -1,0 +1,2 @@
+[] Migrate 'lecture_mode' to python
+[] 
