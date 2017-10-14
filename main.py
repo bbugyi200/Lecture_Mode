@@ -29,6 +29,7 @@ def main():
             DB_Connection.commit()
 
     keyhooks.start()
+    latex.build()
 
 
 if __name__ == '__main__':
