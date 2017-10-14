@@ -1,5 +1,3 @@
-===== Dmenu Version =====
-
-===== Tinker Version =====
-
-===== SQLite DB =====
+[] Setup Latex Version
+[] Setup Vim+Tmux Version
+[] Config File

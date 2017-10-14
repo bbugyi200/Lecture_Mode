@@ -1,6 +1,3 @@
-import pyxhook
-import time
-import latex
 import keyhooks
 import dmenu
 import sqlite3
@@ -29,6 +26,8 @@ def main():
         if choice.lower() == 'y':
             DB.execute('INSERT INTO topics VALUES (?)', (topic,))
             DB_Connection.commit()
+
+    keyhooks.start()
 
 
 if __name__ == '__main__':
