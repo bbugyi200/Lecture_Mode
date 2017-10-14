@@ -28,7 +28,7 @@ def main():
             DB.execute('INSERT INTO topics VALUES (?)', (topic,))
             DB_Connection.commit()
 
-    latex.build()
+    latex.build(topic)
     keyhooks.start()
 
 
