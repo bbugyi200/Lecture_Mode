@@ -1,3 +1,4 @@
+import latex
 import keyhooks
 import dmenu
 import sqlite3
