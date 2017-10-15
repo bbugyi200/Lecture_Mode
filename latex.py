@@ -4,9 +4,16 @@ import fileinput
 import os
 import public
 import time
+import datetime
+import templates as temps
 
 
 class LatexDoc:
+
+    def __init__(self):
+        self.build()
+        self.compile()
+        self.open()
 
     def build(self):
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -15,11 +22,18 @@ class LatexDoc:
         self.bakPath = self.pdfPath.replace('pdf', 'bak')
 
         if os.path.isfile(self.pdfPath):
-            self.oldNotesExist = True
             shutil.copyfile(self.pdfPath, self.bakPath)
         else:
             shutil.copyfile('LaTeX/template.tex', self.texFile)
-            self.replace('% TITLE %', public.topic)
+            self.replace('TITLE', public.topic)
+
+        self.putDate()
+
+    def putDate(self):
+        dt = datetime.date.today()
+        stamp = datetime.datetime.strftime(dt, '%B %d, %Y')
+        self.replace('DATE',
+                     temps.DATE % stamp)
 
     def compile(self):
         cmd = ['pdflatex', '-file-line-error', '-output-directory', '/tmp',
@@ -45,10 +59,10 @@ class LatexDoc:
     def replace(self, target, text):
         with fileinput.FileInput(self.texFile, inplace=True) as file:
             for line in file:
-                print(line.replace(target, text), end='')
+                print(line.replace('% ' + target + ' %', text), end='')
 
     def undoChanges(self):
-        if self.oldNotesExist:
+        if os.path.isfile(self.bakPath):
             shutil.move(self.bakPath, self.pdfPath)
         else:
             os.remove(self.texFile)

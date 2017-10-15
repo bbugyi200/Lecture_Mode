@@ -4,7 +4,8 @@ import actions
 import public
 
 PressedKeys = list()
-running = True
+public.running = True
+public.modified = False
 
 
 class KeyBind:
@@ -16,9 +17,9 @@ class KeyBind:
         self.action = action
 
 
-Actions = actions.Actions()
-Mappings = (KeyBind(('Alt', 'x'), Actions.kill),
-            KeyBind(('Control', 'Return'), Actions.bullet))
+Mappings = (KeyBind(('Alt', 'x'), actions.kill),
+            KeyBind(('Control', 'Return'), actions.bullet_factory(primary=True)),
+            KeyBind(('Shift', 'Return'), actions.bullet_factory(primary=False)))
 
 
 def filterKey(key):
@@ -30,6 +31,8 @@ def KeyDown(event):
     for mapping in Mappings:
         if all([key in PressedKeys for key in mapping.keys]):
             mapping.action()
+            if mapping.action != actions.kill:
+                public.modified = True
 
 
 def KeyUp(event):
@@ -46,10 +49,11 @@ def start():
     hookman.HookKeyboard()
     hookman.start()
 
-    while Actions.running:
+    public.running = True
+    while public.running:
         time.sleep(0.1)
 
     hookman.cancel()
 
-    if not public.documentModified:
+    if not public.modified:
         public.LatexDoc.undoChanges()

@@ -1,32 +1,30 @@
 import public
 import dmenu
-import datetime
-
-itemize = '''
-\\begin{enumerate}
-   \item %s
-   %% NEXT BULLET %%
-\end{enumerate}
-
-%% TIMESTAMP %%'''
+import templates as temps
 
 
-class Actions:
-    running = True
-    public.documentModified = False
+def kill():
+    public.running = False
 
-    def kill(self):
-        self.running = False
 
-    def timestamp(self):
-        dt = datetime.date.today()
-        stamp = datetime.datetime.strftime(dt, '%B %d, %Y')
-        public.LatexDoc.replace('% TIMESTAMP %',
-                                '\\section*{%s}' % stamp)
+def bullet_factory(primary=True):
+    def bullet():
+        if '% ITEMIZE %' in open(public.LatexDoc.texFile).read():
+            public.LatexDoc.putDate()
+            public.LatexDoc.replace('ITEMIZE', temps.ITEMIZE + temps.NEW_DATE)
 
-    def bullet(self):
-        if not public.documentModified:
-            public.documentModified = True
-            self.timestamp()
-        note = dmenu.show([], prompt="Note: ")
-        public.LatexDoc.replace('% BEGIN %', itemize % note)
+        prompt = "Note: (primary)" if bullet.primary else "Note: (secondary)"
+        note = dmenu.show([], prompt=prompt)
+
+        if bullet.primary:
+            public.LatexDoc.replace('ITEM', temps.ITEM % note)
+        else:
+            if '% SUB %' not in open(public.LatexDoc.texFile).read():
+                public.LatexDoc.replace('ITEM', temps.SUBITEMIZE)
+
+            public.LatexDoc.replace('SUB', temps.SUB % note)
+
+        public.LatexDoc.compile()
+
+    bullet.primary = primary
+    return bullet

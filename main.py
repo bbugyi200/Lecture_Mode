@@ -30,10 +30,6 @@ def main():
             DB_Connection.commit()
 
     public.LatexDoc = latex.LatexDoc()
-    public.LatexDoc.build()
-    public.LatexDoc.compile()
-    public.LatexDoc.open()
-
     keyhooks.start()
 
 
