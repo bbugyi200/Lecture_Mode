@@ -7,21 +7,16 @@ import time
 
 
 class LatexDoc:
-    def __init__(self):
-        self.texFile = ''
-        self.bakFile = ''
-        self.oldNotesExist = False
-        self.pdfDir = r'/home/bryan/Dropbox/notes/Study/Lectures'
-        self.script_dir = os.path.dirname(os.path.realpath(__file__))
 
     def build(self):
+        self.script_dir = os.path.dirname(os.path.realpath(__file__))
         self.texFile = 'LaTeX/%s.tex' % public.topic.replace(' ', '_')
-        self.bakFile = self.texFile.replace('tex', 'bak')
-        self.pdfFile = self.texFile.replace('tex', 'pdf').replace('LaTeX/', '')
+        self.pdfPath = r'/home/bryan/Dropbox/notes/Study/Lectures/' + self.texFile.replace('tex', 'pdf').replace('LaTeX/', '')
+        self.bakPath = self.pdfPath.replace('pdf', 'bak')
 
-        if os.path.isfile(self.texFile):
+        if os.path.isfile(self.pdfPath):
             self.oldNotesExist = True
-            shutil.copyfile(self.texFile, self.bakFile)
+            shutil.copyfile(self.pdfPath, self.bakPath)
         else:
             shutil.copyfile('LaTeX/template.tex', self.texFile)
             self.replace('% TITLE %', public.topic)
@@ -34,7 +29,7 @@ class LatexDoc:
         count = 0
         while(True):
             try:
-                shutil.move('/tmp/' + self.pdfFile, self.pdfDir + '/' + self.pdfFile)
+                shutil.move('/tmp/' + os.path.basename(self.pdfPath), self.pdfPath)
                 break
             except FileNotFoundError:
                 if count < 5:
@@ -44,7 +39,7 @@ class LatexDoc:
                     raise FileNotFoundError()
 
     def open(self):
-        cmd = ['zathura', self.pdfDir + '/' + self.pdfFile]
+        cmd = ['zathura', self.pdfPath]
         subprocess.Popen(cmd)
 
     def replace(self, target, text):
@@ -54,6 +49,6 @@ class LatexDoc:
 
     def undoChanges(self):
         if self.oldNotesExist:
-            shutil.move(self.bakFile, self.texFile)
+            shutil.move(self.bakPath, self.pdfPath)
         else:
             os.remove(self.texFile)
