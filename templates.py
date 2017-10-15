@@ -1,5 +1,6 @@
 DATE = '''\\section*{%s}
-%% ITEMIZE %%'''
+%% ITEMIZE %%
+%% DATE %%'''
 
 ITEMIZE = '''\\begin{itemize}
    \setlength\itemsep{1.5em}
@@ -17,6 +18,3 @@ ITEM = '''\item %s
 
 SUB = '''\item %s
     %% SUB %%'''
-
-NEW_DATE = '''
-% DATE %'''

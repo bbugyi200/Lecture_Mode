@@ -2,14 +2,14 @@ import subprocess
 import shutil
 import fileinput
 import os
-import public
+import public as pub
 import time
 import datetime
-import templates as temps
+from templates import DATE
+# TODO : Move templates.tex into templates.py
 
 
 class LatexDoc:
-
     def __init__(self):
         self.build()
         self.compile()
@@ -17,7 +17,7 @@ class LatexDoc:
 
     def build(self):
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
-        self.texFile = 'LaTeX/%s.tex' % public.topic.replace(' ', '_')
+        self.texFile = 'LaTeX/%s.tex' % pub.topic.replace(' ', '_')
         self.pdfPath = r'/home/bryan/Dropbox/notes/Study/Lectures/' + self.texFile.replace('tex', 'pdf').replace('LaTeX/', '')
         self.bakPath = self.pdfPath.replace('pdf', 'bak')
 
@@ -25,15 +25,13 @@ class LatexDoc:
             shutil.copyfile(self.pdfPath, self.bakPath)
         else:
             shutil.copyfile('LaTeX/template.tex', self.texFile)
-            self.replace('TITLE', public.topic)
+            self.replace('TITLE', pub.topic)
 
-        self.putDate()
-
-    def putDate(self):
+    def setDate(self):
         dt = datetime.date.today()
         stamp = datetime.datetime.strftime(dt, '%B %d, %Y')
         self.replace('DATE',
-                     temps.DATE % stamp)
+                     DATE % stamp)
 
     def compile(self):
         cmd = ['pdflatex', '-file-line-error', '-output-directory', '/tmp',
@@ -105,8 +103,8 @@ class LatexDoc:
 
         lineNum = 1
         deleteLine = False
-        BadItemize = False
-        BadSubItemize = False
+        EmptyItemize = False
+        EmptySubItemize = False
         with fileinput.FileInput(self.texFile, inplace=True) as file:
             for line in file:
                 if lineNum > beginNum:
@@ -117,12 +115,12 @@ class LatexDoc:
                         print(line, end='')
 
                         if r'\begin{itemize}' in line:
-                            BadItemize = True
+                            EmptyItemize = True
                         if r'\begin{subitemize}' in line:
-                            BadSubItemize = True
+                            EmptySubItemize = True
                         if r'\item ' in line:
-                            BadItemize = False
-                            BadSubItemize = False
+                            EmptyItemize = False
+                            EmptySubItemize = False
 
                     if lineNum == endNum:
                         deleteLine = False
@@ -131,15 +129,9 @@ class LatexDoc:
 
                 lineNum += 1
 
-        if BadItemize:
-            self.replace('DATE', '% ITEMIZE %')
-            self.deleteEndRange([r'\begin{itemize}'], [r'% ITEMIZE %'])
+        if EmptyItemize:
+            self.deleteEndRange([r'\section*'], [r'% DATE %'])
+            pub.Actions.DateIsSet = False
 
-        if BadSubItemize:
+        if EmptySubItemize:
             self.deleteEndRange([r'\begin{subitemize}'], [r'% ITEM %'])
-
-    def undoChanges(self):
-        if os.path.isfile(self.bakPath):
-            shutil.move(self.bakPath, self.pdfPath)
-        else:
-            os.remove(self.texFile)

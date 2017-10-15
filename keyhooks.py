@@ -1,27 +1,25 @@
 import pyxhook
 import time
 import actions
-import public
+import public as pub
 
-PressedKeys = list()
-public.running = True
-public.modified = False
+PressedKeys = set()
+pub.running = True
 
 
 class KeyBind:
-    keys = tuple()
-    action = ...
-
     def __init__(self, keys, action):
         self.keys = keys
         self.action = action
 
 
-Mappings = (KeyBind(('Alt', 'x'), actions.kill),
-            KeyBind(('Control', 'Return'), actions.bullet_factory(major=True)),
-            KeyBind(('Shift', 'Return'), actions.bullet_factory(major=False)),
-            KeyBind(('Alt', 'd'), actions.delete_factory(major=False)),
-            KeyBind(('Alt', 'D'), actions.delete_factory(major=True)))
+pub.Actions = actions.Actions()
+Mappings = (KeyBind(('Control', 'x'), pub.Actions.kill),
+            KeyBind(('Control', 'Return'), pub.Actions.bullet_factory(major=True)),
+            KeyBind(('Shift', 'Return'), pub.Actions.bullet_factory(major=False)),
+            KeyBind(('Alt', 'd'), pub.Actions.delete_factory(major=False)),
+            KeyBind(('Alt', 'D'), pub.Actions.delete_factory(major=True)),
+            KeyBind(('Alt', 'S'), pub.Actions.toggleDateCheck))
 
 
 def filterKey(key):
@@ -29,18 +27,16 @@ def filterKey(key):
 
 
 def KeyDown(event):
-    PressedKeys.append(filterKey(event.Key))
+    PressedKeys.add(filterKey(event.Key))
     for mapping in Mappings:
         if all([key in PressedKeys for key in mapping.keys]):
             mapping.action()
-            if mapping.action != actions.kill:
-                public.modified = True
 
 
 def KeyUp(event):
     try:
         PressedKeys.remove(filterKey(event.Key))
-    except ValueError:
+    except KeyError:
         pass
 
 
@@ -51,11 +47,8 @@ def start():
     hookman.HookKeyboard()
     hookman.start()
 
-    public.running = True
-    while public.running:
+    pub.running = True
+    while pub.running:
         time.sleep(0.1)
 
     hookman.cancel()
-
-    if not public.modified:
-        public.LatexDoc.undoChanges()

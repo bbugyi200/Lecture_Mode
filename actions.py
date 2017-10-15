@@ -1,47 +1,54 @@
-import public
+import public as pub
 import dmenu
-import templates as temps
+from templates import ITEMIZE, SUBITEMIZE, ITEM, SUB
 
 
-def kill():
-    public.running = False
+class Actions:
+    def __init__(self):
+        self.DateIsSet = False
 
+    def toggleDateCheck(self):
+        self.DateIsSet = not self.DateIsSet
 
-def bullet_factory(major=True):
-    def bullet():
-        if '% ITEMIZE %' in open(public.LatexDoc.texFile).read():
-            public.LatexDoc.replace('ITEMIZE', temps.ITEMIZE + temps.NEW_DATE)
+    def kill(self):
+        pub.running = False
 
-        prompt = "Note (major): " if bullet.major else "Note (minor): "
-        note = dmenu.show([], prompt=prompt)
+    def bullet_factory(self, major=True):
+        def bullet():
+            if not self.DateIsSet:
+                pub.LatexDoc.setDate()
+                pub.LatexDoc.replace('ITEMIZE', ITEMIZE)
+                self.DateIsSet = True
 
-        if bullet.major:
-            public.LatexDoc.replace('ITEM', temps.ITEM % note)
-            public.LatexDoc.deleteEndRange(['% SUB %'], [])
-        else:
-            if '% SUB %' not in open(public.LatexDoc.texFile).read():
-                public.LatexDoc.replace('ITEM', temps.SUBITEMIZE)
+            prompt = "Note (major): " if bullet.major else "Note (minor): "
+            note = dmenu.show([], prompt=prompt)
 
-            public.LatexDoc.replace('SUB', temps.SUB % note)
+            if bullet.major:
+                pub.LatexDoc.replace('ITEM', ITEM % note)
+                pub.LatexDoc.deleteEndRange(['% SUB %'], [])
+            else:
+                if '% SUB %' not in open(pub.LatexDoc.texFile).read():
+                    pub.LatexDoc.replace('ITEM', SUBITEMIZE)
 
-        public.LatexDoc.compile()
+                pub.LatexDoc.replace('SUB', SUB % note)
 
-    bullet.major = major
-    return bullet
+            pub.LatexDoc.compile()
 
+        bullet.major = major
+        return bullet
 
-def delete_factory(major=True):
-    def delete():
-        if delete.major:
-            start = [r'\begin{subitemize}']
-            end = [r'% ITEM %']
-            public.LatexDoc.deleteEndRange(start, end)
+    def delete_factory(self, major=True):
+        def delete():
+            if delete.major:
+                start = [r'\begin{subitemize}']
+                end = [r'% ITEM %']
+                pub.LatexDoc.deleteEndRange(start, end)
 
-        start = [r'\item ']
-        end = [r'\item ', r'% SUB %', r'% ITEM %', r'\end{itemize}', r'\end{subitemize}']
+            start = [r'\item ']
+            end = [r'\item ', r'% SUB %', r'% ITEM %', r'\end{itemize}', r'\end{subitemize}']
 
-        public.LatexDoc.deleteEndRange(start, end)
-        public.LatexDoc.compile()
+            pub.LatexDoc.deleteEndRange(start, end)
+            pub.LatexDoc.compile()
 
-    delete.major = major
-    return delete
+        delete.major = major
+        return delete

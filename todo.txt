@@ -1,6 +1,0 @@
-[] Setup Latex Version
-[] Setup Vim+Tmux Version
-[] Config File
-[] Add Module Comments
-
-===== Actions =====

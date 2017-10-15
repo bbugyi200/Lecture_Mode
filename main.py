@@ -1,7 +1,7 @@
 import keyhooks
 import dmenu
 import sqlite3
-import public
+import public as pub
 import latex
 
 DB_Path = 'topics.db'
@@ -20,16 +20,16 @@ def getAllTopics() -> "List of Strings":
 
 def main():
     Topics_List = getAllTopics()
-    public.topic = dmenu.show(Topics_List)
+    pub.topic = dmenu.show(Topics_List)
 
-    if public.topic not in Topics_List:
+    if pub.topic not in Topics_List:
         prompt = 'Would you like to save this topic for future use (y/n)?: '
         choice = dmenu.show([], prompt=prompt)
         if choice.lower() == 'y':
-            DB.execute('INSERT INTO topics VALUES (?)', (public.topic,))
+            DB.execute('INSERT INTO topics VALUES (?)', (pub.topic,))
             DB_Connection.commit()
 
-    public.LatexDoc = latex.LatexDoc()
+    pub.LatexDoc = latex.LatexDoc()
     keyhooks.start()
 
 
