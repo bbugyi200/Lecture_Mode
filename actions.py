@@ -7,17 +7,17 @@ def kill():
     public.running = False
 
 
-def bullet_factory(primary=True):
+def bullet_factory(major=True):
     def bullet():
         if '% ITEMIZE %' in open(public.LatexDoc.texFile).read():
-            public.LatexDoc.putDate()
             public.LatexDoc.replace('ITEMIZE', temps.ITEMIZE + temps.NEW_DATE)
 
-        prompt = "Note: (primary)" if bullet.primary else "Note: (secondary)"
+        prompt = "Note (major): " if bullet.major else "Note (minor): "
         note = dmenu.show([], prompt=prompt)
 
-        if bullet.primary:
+        if bullet.major:
             public.LatexDoc.replace('ITEM', temps.ITEM % note)
+            public.LatexDoc.deleteEndRange(['% SUB %'], [])
         else:
             if '% SUB %' not in open(public.LatexDoc.texFile).read():
                 public.LatexDoc.replace('ITEM', temps.SUBITEMIZE)
@@ -26,5 +26,22 @@ def bullet_factory(primary=True):
 
         public.LatexDoc.compile()
 
-    bullet.primary = primary
+    bullet.major = major
     return bullet
+
+
+def delete_factory(major=True):
+    def delete():
+        if delete.major:
+            start = [r'\begin{subitemize}']
+            end = [r'% ITEM %']
+            public.LatexDoc.deleteEndRange(start, end)
+
+        start = [r'\item ']
+        end = [r'\item ', r'% SUB %', r'% ITEM %', r'\end{itemize}', r'\end{subitemize}']
+
+        public.LatexDoc.deleteEndRange(start, end)
+        public.LatexDoc.compile()
+
+    delete.major = major
+    return delete

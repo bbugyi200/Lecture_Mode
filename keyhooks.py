@@ -18,8 +18,10 @@ class KeyBind:
 
 
 Mappings = (KeyBind(('Alt', 'x'), actions.kill),
-            KeyBind(('Control', 'Return'), actions.bullet_factory(primary=True)),
-            KeyBind(('Shift', 'Return'), actions.bullet_factory(primary=False)))
+            KeyBind(('Control', 'Return'), actions.bullet_factory(major=True)),
+            KeyBind(('Shift', 'Return'), actions.bullet_factory(major=False)),
+            KeyBind(('Alt', 'd'), actions.delete_factory(major=False)),
+            KeyBind(('Alt', 'D'), actions.delete_factory(major=True)))
 
 
 def filterKey(key):
