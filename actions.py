@@ -25,7 +25,7 @@ class Actions:
 
             if bullet.major:
                 pub.LatexDoc.replace('ITEM', ITEM % note)
-                pub.LatexDoc.deleteEndRange(['% SUB %'], [])
+                pub.LatexDoc.deleteEndRange('% SUB %', [])
             else:
                 if '% SUB %' not in open(pub.LatexDoc.texFile).read():
                     pub.LatexDoc.replace('ITEM', SUBITEMIZE)
@@ -40,14 +40,14 @@ class Actions:
     def delete_factory(self, major=True):
         def delete():
             if delete.major:
-                start = [r'\begin{subitemize}']
-                end = [r'% ITEM %']
-                pub.LatexDoc.deleteEndRange(start, end)
+                start = r'\begin{subitemize}'
+                end_patterns = [r'% ITEM %']
+                pub.LatexDoc.deleteEndRange(start, end_patterns)
 
-            start = [r'\item ']
-            end = [r'\item ', r'% SUB %', r'% ITEM %', r'\end{itemize}', r'\end{subitemize}']
+            start = r'\item '
+            end_patterns = [r'\item ', r'% SUB %', r'% ITEM %', r'\end{itemize}', r'\end{subitemize}']
 
-            pub.LatexDoc.deleteEndRange(start, end)
+            pub.LatexDoc.deleteEndRange(start, end_patterns)
             pub.LatexDoc.compile()
 
         delete.major = major

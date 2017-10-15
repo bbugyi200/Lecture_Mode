@@ -1,4 +1,6 @@
-DATE = '''\\section*{%s}
+NEWPAGE = '''\\newpage '''
+
+DATE = '''%s\\section{%s}
 %% ITEMIZE %%
 %% DATE %%'''
 

@@ -5,7 +5,7 @@ import os
 import public as pub
 import time
 import datetime
-from templates import DATE
+from templates import DATE, NEWPAGE
 # TODO : Move templates.tex into templates.py
 
 
@@ -14,6 +14,15 @@ class LatexDoc:
         self.build()
         self.compile()
         self.open()
+
+    def setDate(self):
+        dt = datetime.date.today()
+        timestamp = datetime.datetime.strftime(dt, '%B %d, %Y')
+        if r'\section' in open(self.texFile).read():
+            fmtTuple = (NEWPAGE, timestamp)
+        else:
+            fmtTuple = ('', timestamp)
+        self.replace('DATE', DATE % fmtTuple)
 
     def build(self):
         self.script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -26,12 +35,6 @@ class LatexDoc:
         else:
             shutil.copyfile('LaTeX/template.tex', self.texFile)
             self.replace('TITLE', pub.topic)
-
-    def setDate(self):
-        dt = datetime.date.today()
-        stamp = datetime.datetime.strftime(dt, '%B %d, %Y')
-        self.replace('DATE',
-                     DATE % stamp)
 
     def compile(self):
         cmd = ['pdflatex', '-file-line-error', '-output-directory', '/tmp',
@@ -77,7 +80,7 @@ class LatexDoc:
                     print(line, end='')
                 lineNum += 1
 
-    def deleteEndRange(self, start_patterns, end_patterns):
+    def deleteEndRange(self, start, end_patterns):
         startNum = 0
         endNum = 0
         beginNum = 0
@@ -86,7 +89,7 @@ class LatexDoc:
             for line in file:
                 if r'\begin{document}' in line:
                     beginNum = lineNum
-                if any(x in line for x in start_patterns) and (beginNum != 0):
+                if (start in line) and (beginNum != 0):
                     startNum = lineNum
                 lineNum += 1
 
@@ -130,8 +133,8 @@ class LatexDoc:
                 lineNum += 1
 
         if EmptyItemize:
-            self.deleteEndRange([r'\section*'], [r'% DATE %'])
+            self.deleteEndRange(r'\section', [r'% DATE %'])
             pub.Actions.DateIsSet = False
 
         if EmptySubItemize:
-            self.deleteEndRange([r'\begin{subitemize}'], [r'% ITEM %'])
+            self.deleteEndRange(r'\begin{subitemize}', [r'% ITEM %'])
