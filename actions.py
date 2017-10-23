@@ -15,13 +15,15 @@ class Actions:
 
     def bullet_factory(self, major=True):
         def bullet():
+            prompt = "Note (major): " if bullet.major else "Note (minor): "
+            note = dmenu.show([], prompt=prompt)
+            if not note:
+                return
+
             if not self.DateIsSet:
                 pub.LatexDoc.setDate()
                 pub.LatexDoc.replace('ITEMIZE', ITEMIZE)
                 self.DateIsSet = True
-
-            prompt = "Note (major): " if bullet.major else "Note (minor): "
-            note = dmenu.show([], prompt=prompt)
 
             if bullet.major:
                 pub.LatexDoc.replace('ITEM', ITEM % note)
